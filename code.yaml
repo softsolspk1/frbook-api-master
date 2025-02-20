@@ -1,0 +1,333 @@
+version: v9
+api:
+  - name: frBook
+    version: 1.0.0+1
+    user_type: int
+    libraries:
+      - upload
+    hub_version: v3
+    options:
+      - screenshot_script
+      - upload_bucket
+    mongo: true
+    hubs:
+      - name: CallNotifier
+        backends:
+          - mongo
+      - name: Notifier
+        backends:
+          - mongo
+      - name: SmtpServer
+        backends:
+          - mongo
+      - name: Background
+        backends:
+          - mongo
+        options:
+    types:
+      - name: Article
+        props:
+          - id(int)?
+          - user_id(int)?
+          - tags(string[])?
+          - title?
+          - author_name?
+          - description?
+          - profile_pic?
+          - content?
+          - photo(string)?
+          - pdf(string)?
+          - created_at(datetime)?
+        indices:
+          - id:id
+      - name: CallEvent
+        props:
+          - to_id(int)?
+          - kind(CallEventType)
+          - channel(string)?
+          - from_pic?
+          - to_pic?
+      - name: CallEventType
+        enum:
+          - INCOMING
+          - START_CALL
+          - ACCEPT_CALL
+          - END_CALL
+          - INIT
+      - name: Chat
+        props:
+          - id(int)
+          - from_id(int)
+          - to_id(int)
+          - content
+          - created_at(datetime)
+        indices:
+          - id:id
+      - name: SmsEvent
+        props:
+          - email(string)
+          - subject(string)
+          - success(bool)
+          - content(string)
+      - name: UserType
+        enum:
+          - USER
+          - ADMIN
+      - name: FriendEntry
+        props:
+          - id(int)
+          - from_id(int)
+          - to_id(int)
+          - created_at(datetime)
+        indices:
+          - id:id
+      - name: FriendRequest
+        props:
+          - id(int)
+          - from_id(int)
+          - to_id(int)
+          - created_at(datetime)
+        indices:
+          - id:id
+      - name: Comment
+        props:
+          - id(int)
+          - name?
+          - post_id(int)
+          - user_id(int)
+          - profile_pic?
+          - content
+          - created_at(datetime)
+        indices:
+          - id:id
+      - name: Post
+        props:
+          - id(int)
+          - video?
+          - user_id(int)
+          - title?
+          - image?
+          - name?
+          - profile_pic?
+          - content?
+          - created_at(datetime)
+          - comments_count(int)?
+          - likes_count(int)?
+          - liked(bool)?
+          - likes(int[])?
+        indices:
+          - id:id
+      - name: User
+        props:
+          - id(int)
+          - name
+          - password
+          - phone?
+          - verified(bool)
+          - profile_pic(string)?
+          - email
+          - status(ReqStatus)?
+          - req_id(int)?
+        indices:
+          - id:id
+      - name: ReqStatus
+        enum:
+          - NONE
+          - PENDING
+          - TAKE_ACTION
+    paths:
+      /add-chat:
+        post:
+          operationId: addChat
+          params:
+            - token:user_id(int)
+            - to_id(int)
+            - content
+      /chats:
+        get:
+          operationId: getChats
+          params:
+            - token:user_id(int)
+            - to_id(int)
+          success:
+            body: Chat[]
+      /friend-requests:
+        get:
+          operationId: getFriendRequests
+          params:
+            - token:user_id(int)
+          success:
+            body: FriendRequest[]
+        post:
+          operationId: addFriendRequest
+          params:
+            - token:user_id(int)
+            - to_id(int)
+      /friend-requests/:id/accept:
+        post:
+          operationId: acceptFriendRequest
+          params:
+            - token:user_id(int)
+            - id(int)
+      /friend-requests/:id/reject:
+        post:
+          operationId: rejectFriendRequest
+          params:
+            - token:user_id(int)
+            - id(int)
+      /notfriends:
+        get:
+          operationId: getNotFriends
+          params:
+            - token:user_id(int)
+          success:
+            body: User[]
+      /friends:
+        get:
+          operationId: getFriends
+          params:
+            - token:user_id(int)
+          success:
+            body: User[]
+      /assets/:name:
+        get:
+          operationId: getAsset
+          params:
+            - path:name(string)
+      /uploadlink:
+        post:
+          operationId: uploadLink
+          params:
+            - name(string)
+          success:
+            body: string
+      /articles:
+        get:
+          operationId: getArticles
+          params:
+            - token:user_id(int)
+          success:
+            body: Article[]
+        post:
+          operationId: createArticle
+          params:
+            - token:user_id(int)
+            - title?
+            - author_name?
+            - description?
+            - tags(string)?
+            - content?
+            - photo?
+            - pdf(string)?
+      /articles/:id:
+        post:
+          operationId: updateArticle
+          params:
+            - token:user_id(int)
+            - id(int)
+            - author_name?
+            - description?
+            - title?
+            - tags(string)?
+            - content?
+            - photo?
+            - pdf(string)?
+        get:
+          operationId: getArticle
+          params:
+            - token:user_id(int)
+            - id(int)
+          success:
+            body: Article
+      /posts:
+        get:
+          operationId: getPosts
+          params:
+            - token:user_id(int)
+          success:
+            body: Post[]
+        post:
+          operationId: createPost
+          params:
+            - token:user_id(int)
+            - title?
+            - content?
+            - video?
+            - image?
+      /complete-registration:
+        post:
+          operationId: completeRegistration
+          params:
+            - token:user_id(int)
+            - otp
+      /start-verification:
+        post:
+          operationId: startVerification
+          params:
+            - token:user_id(int)
+          success:
+            body: int
+      /me:
+        get:
+          operationId: me
+          params:
+            - token:user_id(int)
+          success:
+            body: User
+        post:
+          operationId: updateMe
+          params:
+            - token:user_id(int)
+            - profile_pic?
+      /users:
+        get:
+          operationId: getUsers
+          params:
+            - token:user_type(UserType)
+          success:
+            body: User[]
+        post:
+          operationId: register
+          params:
+            - name
+            - email
+            - password
+          success:
+            tokens:
+              - user_id
+              - token:user_type(UserType)
+      /posts/:id/comment:
+        post:
+          operationId: addComment
+          params:
+            - token:user_id(int)
+            - id(int)
+            - content
+        get:
+          operationId: getComments
+          params:
+            - token:user_id(int)
+            - id(int)
+          success:
+            body: Comment[]
+      /posts/:id/like:
+        post:
+          operationId: likePost
+          params:
+            - token:user_id(int)
+            - id(int)
+      /posts/:id/unlike:
+        post:
+          operationId: unlikePost
+          params:
+            - token:user_id(int)
+            - id(int)
+      /login:
+        post:
+          operationId: login
+          params:
+            - email
+            - password
+          success:
+            tokens:
+              - user_id

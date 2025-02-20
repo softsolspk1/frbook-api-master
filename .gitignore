@@ -1,0 +1,7 @@
+.metas/
+.cache/
+bin/
+upload/
+.DS_Store
+__debug_bin
+assets/
