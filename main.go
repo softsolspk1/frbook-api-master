@@ -29,7 +29,7 @@ import (
 )
 
 type MongoOptions struct {
-	Uri      string `long:"uri" description:"Enter Mongo URI to connect to" default:"mongodb://localhost:27017"`
+	Uri      string `long:"uri" description:"Enter Mongo URI to connect to" default:"mongodb+srv://softsolspak:SFWZ9evKS69CdQSx@respire.9xsja.mongodb.net/"`
 	Database string `long:"database" description:"Which MongoDatabse to connect to" default:"test"`
 }
 
